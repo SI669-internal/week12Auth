@@ -5,7 +5,7 @@ import { FlatList, Modal, StyleSheet, Button, Alert,
 import { initializeApp, getApps } from 'firebase/app';
 import { 
   initializeFirestore, collection,  
-  query, orderBy, onSnapshot,
+  onSnapshot,
   doc, addDoc, setDoc, updateDoc
 } from "firebase/firestore";
 import { getAuth, onAuthStateChanged,
@@ -28,7 +28,6 @@ const auth = getAuth();
 export default function App() {
 
   const [users, setUsers] = useState([]);
-  const [showLogin, setShowLogin] = useState(false);
   const [mode, setMode] = useState('login');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -41,7 +40,6 @@ export default function App() {
       qSnap.forEach(docSnap => {
         let u = docSnap.data();
         u.key = docSnap.id;
-        console.log('pushing user', u);
         userList.push(u);
       });
       setUsers(userList);
@@ -183,7 +181,8 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
     alignItems: 'center',
     width: '100%',
-    paddingTop: '30%'
+    paddingTop: '30%',
+    paddingBottom: '10%'
   },
   loginRow: {
     flexDirection: 'row',
