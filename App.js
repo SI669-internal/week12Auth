@@ -29,33 +29,43 @@ export default function App() {
 
   const [users, setUsers] = useState([]);
   const [mode, setMode] = useState('login');
-  const [isAuthed, setIsAuthed] = useState(false);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [displayName, setDisplayName] = useState('');
 
-  useEffect(()=>{
-    let onSnapshotUnsub = undefined;
-    onAuthStateChanged(auth, (user) => {
-      if (user) {
-        const query = collection(db, 'users');
-        onSnapshotUnsub = onSnapshot(query, qSnap => {
-          let userList = [];
-          qSnap.forEach(docSnap => {
-            let u = docSnap.data();
-            u.key = docSnap.id;
-            userList.push(u);
+  let onSnapshotUnsub = undefined;
+
+  function handleAuthStateChange(user) {
+    console.log('in handleAuthStateChange, user:', user ? user.email : 'none');
+    console.log('displayName:', displayName);
+    if (user) {
+      const query = collection(db, 'users');
+      onSnapshotUnsub = onSnapshot(query, qSnap => {
+        let userList = [];
+        qSnap.forEach(docSnap => {
+          let u = docSnap.data();
+          u.key = docSnap.id;
+          userList.push(u);
+        });
+        if (!userList.find(elem=>elem.authId===user.uid)){
+          // must be a new user!
+          const newUserDoc = addDoc(collection(db, 'users'), {
+            displayName: displayName, // assume state variable is current
+            authId: user.uid
           });
-          setUsers(userList);
-        });  
-      } else {
-        // logged out
-        if (onSnapshotUnsub) {
-          onSnapshotUnsub();
-          setUsers([]);
         }
+        setUsers(userList);
+      });  
+    } else {
+      if (onSnapshotUnsub) {
+        onSnapshotUnsub();
+        setUsers([]);
       }
-    });
+    }
+  }
+
+  useEffect(()=>{
+    onAuthStateChanged(auth, handleAuthStateChange);
   }, []);
 
   return (
@@ -163,6 +173,7 @@ export default function App() {
                   }
               } else {
                 try {
+                  console.log('displayName should be', displayName);
                   await createUserWithEmailAndPassword(auth, email, password);  
                   console.log('created user', email);
                 } catch(error) {
